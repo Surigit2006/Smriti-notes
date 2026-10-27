@@ -1,0 +1,11 @@
+services:
+  smriti:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: smriti-notes:local
+    container_name: smriti-notes
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    init: true

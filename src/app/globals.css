@@ -1,0 +1,717 @@
+@import "tailwindcss";
+@import "prosemirror-view/style/prosemirror.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ========================================
+   Smriti Notes — Global Theme Variables
+   ThemeProvider defines these on :root:
+   --background --sidebar-background --surface --foreground --muted
+   --border --hover --active --accent --accent-foreground
+   --surface-blur --surface-shadow
+   and sets data-theme / data-theme-mode / data-transparent.
+======================================== */
+
+:root {
+  color-scheme: var(--theme-color-scheme, light);
+  background-color: var(--background, #f5f0e8);
+  
+
+  --code-font:
+    var(--font-geist-mono), "JetBrains Mono", "Fira Code", ui-monospace,
+    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+:root[data-theme-mode="dark"] {
+  color-scheme: dark;
+}
+
+html {
+  min-height: 100%;
+  background-color: var(--background, #f5f0e8);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background-color: var(--background, #f5f0e8);
+  color: var(--foreground, #292524);
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+/* ========================================
+   Transparent (glass) themes
+======================================== */
+
+/* Let the desktop / window vibrancy show through. */
+html[data-transparent="true"],
+html[data-transparent="true"] body {
+  background: transparent;
+}
+
+/* Ambient backdrop so the glass has something to blur,
+   even in a normal browser tab with no desktop behind it. */
+html[data-transparent="true"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      60% 50% at 15% 10%,
+      color-mix(in srgb, var(--accent) 38%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      55% 45% at 90% 85%,
+      color-mix(in srgb, var(--accent) 24%, transparent),
+      transparent 70%
+    ),
+    color-mix(in srgb, var(--foreground) 6%, #888);
+}
+
+/* Glass blur on the main chrome. */
+html[data-transparent="true"] aside,
+html[data-transparent="true"] [role="dialog"],
+html[data-transparent="true"] [role="menu"],
+html[data-transparent="true"] .smriti-surface {
+  -webkit-backdrop-filter: blur(var(--surface-blur, 18px)) saturate(1.4);
+  backdrop-filter: blur(var(--surface-blur, 18px)) saturate(1.4);
+}
+
+html[data-transparent="true"] [role="dialog"],
+html[data-transparent="true"] [role="menu"] {
+  box-shadow: var(--surface-shadow, none);
+}
+
+/* Shared surface styling */
+.smriti-surface {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--surface-shadow, none);
+}
+
+/* Checkerboard used behind translucent theme previews */
+.smriti-checker {
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(45deg, #d9d9d9 25%, transparent 25%),
+    linear-gradient(-45deg, #d9d9d9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #d9d9d9 75%),
+    linear-gradient(-45deg, transparent 75%, #d9d9d9 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+}
+
+/* ========================================
+   Tiptap / ProseMirror Editor Base
+======================================== */
+
+.tiptap,
+.ProseMirror,
+.smriti-editor-content {
+  min-height: 500px;
+  outline: none;
+  color: var(--foreground);
+  background: transparent;
+  font-size: 1rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.tiptap > * + * {
+  margin-top: 0.75em;
+}
+
+.tiptap p,
+.ProseMirror p,
+.smriti-editor-content p {
+  margin: 0.5rem 0;
+}
+
+/* ========================================
+   Headings
+======================================== */
+
+.tiptap h1,
+.ProseMirror h1,
+.smriti-editor-content h1 {
+  margin: 1.5rem 0 0.75rem;
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.tiptap h2,
+.ProseMirror h2,
+.smriti-editor-content h2 {
+  margin: 1.35rem 0 0.65rem;
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.tiptap h3,
+.ProseMirror h3,
+.smriti-editor-content h3 {
+  margin: 1.15rem 0 0.55rem;
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.ProseMirror h4,
+.smriti-editor-content h4 {
+  margin: 1rem 0 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.ProseMirror h5,
+.smriti-editor-content h5 {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.ProseMirror h6,
+.smriti-editor-content h6 {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+/* ========================================
+   Lists
+======================================== */
+
+.tiptap ul,
+.tiptap ol,
+.ProseMirror ul,
+.ProseMirror ol,
+.smriti-editor-content ul,
+.smriti-editor-content ol {
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
+}
+
+.tiptap ul,
+.ProseMirror ul,
+.smriti-editor-content ul {
+  list-style-type: disc;
+}
+
+.tiptap ol,
+.ProseMirror ol,
+.smriti-editor-content ol {
+  list-style-type: decimal;
+}
+
+.tiptap li,
+.ProseMirror li,
+.smriti-editor-content li {
+  padding-left: 0.25rem;
+  margin: 0.2rem 0;
+}
+
+.ProseMirror ul ul,
+.ProseMirror ol ol,
+.ProseMirror ul ol,
+.ProseMirror ol ul {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+/* ========================================
+   Blockquotes
+======================================== */
+
+.tiptap blockquote,
+.ProseMirror blockquote,
+.smriti-editor-content blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ========================================
+   Inline Code and Code Blocks
+======================================== */
+
+.tiptap code,
+.ProseMirror code,
+.smriti-editor-content code {
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.35rem;
+  background: var(--hover);
+  color: var(--foreground);
+  font-size: 0.9em;
+}
+
+.tiptap pre,
+.ProseMirror pre,
+.smriti-editor-content pre {
+  margin: 1rem 0;
+  overflow-x: auto;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  tab-size: 2;
+}
+
+.tiptap pre code,
+.ProseMirror pre code,
+.smriti-editor-content pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 0;
+}
+
+.smriti-codeblock,
+.smriti-codeblock *,
+.ProseMirror pre,
+.ProseMirror pre *,
+.ProseMirror code {
+  font-family: var(--code-font) !important;
+}
+
+/* ========================================
+   Horizontal Rules
+======================================== */
+
+.tiptap hr,
+.ProseMirror hr,
+.smriti-editor-content hr {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+/* ========================================
+   Text Formatting
+======================================== */
+
+.tiptap strong,
+.ProseMirror strong,
+.smriti-editor-content strong {
+  font-weight: 700;
+}
+
+.tiptap em,
+.ProseMirror em,
+.smriti-editor-content em {
+  font-style: italic;
+}
+
+.tiptap s,
+.ProseMirror s,
+.smriti-editor-content s {
+  text-decoration: line-through;
+}
+
+.ProseMirror u,
+.smriti-editor-content u {
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.ProseMirror mark,
+.smriti-editor-content mark {
+  padding: 0;
+  border-radius: 0;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.ProseMirror [style*="font-family"] {
+  font-family: inherit;
+}
+
+/* ========================================
+   Task Checklists
+======================================== */
+
+.smriti-task-list,
+.smriti-editor-content ul[data-type="taskList"] {
+  margin: 0.75rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.smriti-task-item,
+.smriti-editor-content ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.smriti-task-item > label,
+.smriti-editor-content ul[data-type="taskList"] li > label {
+  display: flex;
+  align-items: center;
+  padding-top: 0.3rem;
+}
+
+.smriti-task-item > label input[type="checkbox"],
+.smriti-editor-content ul[data-type="taskList"] input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.smriti-task-item > div,
+.smriti-editor-content ul[data-type="taskList"] li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ========================================
+   Empty Editor Placeholder
+======================================== */
+
+.tiptap p.is-editor-empty:first-child::before,
+.ProseMirror p.is-editor-empty:first-child::before,
+.smriti-editor-content p.is-editor-empty:first-child::before {
+  float: left;
+  height: 0;
+  color: var(--muted);
+  opacity: 0.75;
+  pointer-events: none;
+  content: "Start writing...";
+}
+
+/* ========================================
+   Tables
+======================================== */
+
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+  position: relative;
+  min-width: 80px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  box-sizing: border-box;
+}
+
+.ProseMirror th {
+  background: var(--surface);
+  font-weight: 600;
+  text-align: left;
+}
+
+.ProseMirror td > p,
+.ProseMirror th > p {
+  margin: 0;
+}
+
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -1px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: color-mix(in srgb, var(--muted) 65%, transparent);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
+.ProseMirror .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  pointer-events: none;
+}
+
+/* ========================================
+   Scrollbars
+======================================== */
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+*:hover::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+.smriti-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted) 35%, transparent) transparent;
+}
+
+.smriti-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.smriti-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ========================================
+   Mobile & Base Adjustments
+======================================== */
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  .ProseMirror,
+  .smriti-editor-content {
+    min-height: 300px;
+  }
+}
+
+/* =========================================
+   SMRITI — MACOS GLASS EDITOR DOCK & MENUS
+   (Clean, Consistent Classic Modern Border)
+   ========================================= */
+
+.smriti-toolbar-track {
+  background: transparent;
+}
+
+.smriti-mac-toolbar {
+  position: relative;
+  isolation: isolate;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  /* Translucent Surface */
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  
+  /* Consistent, clean modern border on all sides */
+  border: 1px solid var(--border);
+
+  /* Refined, balanced soft shadow */
+  box-shadow:
+    0 4px 20px -2px rgba(0, 0, 0, 0.08),
+    0 2px 6px -1px rgba(0, 0, 0, 0.04);
+
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+
+.smriti-mac-toolbar::-webkit-scrollbar {
+  display: none;
+}
+
+.smriti-mac-toolbar > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dock Button Interactive States */
+.smriti-mac-toolbar .smriti-dock-button {
+  position: relative;
+  flex-shrink: 0;
+  transform: translateY(0) scale(1);
+  transform-origin: center;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 180ms ease;
+}
+
+.smriti-mac-toolbar .smriti-dock-button:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.045);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.055);
+}
+
+.smriti-mac-toolbar .smriti-dock-button:active:not(:disabled) {
+  transform: scale(0.96);
+  box-shadow: none;
+}
+
+.smriti-mac-toolbar .smriti-dock-button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--active) 86%, transparent);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.055),
+    0 1px 2px rgba(0, 0, 0, 0.035);
+}
+
+.smriti-mac-toolbar > div[aria-hidden="true"] {
+  opacity: 0.65;
+  margin-inline: 3px;
+}
+
+/* Style Menu Dropdown Styling */
+.smriti-style-menu {
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  border: 1px solid var(--border);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Accessibility & Fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  .smriti-mac-toolbar .smriti-dock-button {
+    transition: none;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .smriti-mac-toolbar,
+  .smriti-style-menu {
+    background: var(--surface);
+  }
+}
+/* Smriti Notes — preserve table width and scroll horizontally */
+
+.tiptap .tableWrapper {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.tiptap table {
+  width: max-content !important;
+  min-width: 100%;
+  max-width: none !important;
+  table-layout: auto !important;
+  border-collapse: collapse;
+  flex-shrink: 0;
+}
+
+.tiptap th,
+.tiptap td {
+  min-width: 120px;
+  max-width: none;
+  overflow-wrap: break-word;
+  vertical-align: top;
+}
+
+/* Keep the editor itself within the available page width */
+.tiptap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Smriti Notes — theme-aware table scrollbar */
+
+.tiptap .tableWrapper {
+  scrollbar-width: thin;
+  scrollbar-color:
+    color-mix(in srgb, var(--foreground) 28%, transparent)
+    transparent;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tiptap .tableWrapper::-webkit-scrollbar {
+  height: 5px;
+}
+
+.tiptap .tableWrapper::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.tiptap .tableWrapper::-webkit-scrollbar-thumb {
+  background: color-mix(
+    in srgb,
+    var(--foreground) 28%,
+    transparent
+  );
+  border-radius: 999px;
+  transition: background-color 180ms ease;
+}
+
+.tiptap .tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: color-mix(
+    in srgb,
+    var(--foreground) 48%,
+    transparent
+  );
+}
+
+.tiptap .tableWrapper::-webkit-scrollbar-corner {
+  background: transparent;
+}
+[data-brutalist="true"] {
+  --smriti-border-width: 2px;
+  --smriti-shadow: 4px 4px 0px var(--smriti-border);
+  --smriti-shadow-hover: 2px 2px 0px var(--smriti-border);
+}
+.app-icon {
+  width: 128px;
+  height: 128px;
+  object-fit: cover;
+  border-radius: 24%;
+}
